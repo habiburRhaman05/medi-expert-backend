@@ -93,6 +93,7 @@ const getAllNewTokens = async (
   refreshToken: string,
   sessionToken: string
 ) => {
+    console.log("token update start");
  
     const isSessionTokenExists = await prisma.session.findUnique({
         where : {
@@ -142,10 +143,13 @@ const getAllNewTokens = async (
         },
         data : {
             token : sessionToken,
-            expiresAt: new Date(Date.now() + 60 * 60 * 60 * 24 * 1000),
+            expiresAt: new Date(Date.now() + 60 * 60  * 1000),
             updatedAt: new Date(),
         }
     })
+
+    console.log("token updated");
+    
 
     return {
         accessToken : newAccessToken,

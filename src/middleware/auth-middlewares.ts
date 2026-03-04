@@ -30,8 +30,8 @@ export async function authMiddleware(
       
       include: { user: true }
     });
-    console.log("session data",sessionData);
-    console.log("token",token);
+    // console.log("session data",sessionData);
+    // console.log("token",token);
     
 
     if (!sessionData || !sessionData.user) {
