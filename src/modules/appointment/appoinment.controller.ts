@@ -58,6 +58,7 @@ const createAppointment = asyncHandler(
 const createAppointmentWithPayLater = asyncHandler(
   async (req: Request, res: Response) => {
     const payload = req.body;
+    
      payload.videoCallingId = String(uuidv7())
 
     const result = await appointmentServices.createAppointmentWithPaylater(payload);

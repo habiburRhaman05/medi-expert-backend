@@ -5,6 +5,8 @@ import { formatZodError } from "../utils/formatZodError";
 export const validateRequest =
   (schema: AnyZodObject) =>
   (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body);
+    
     try {
       schema.parse({
         body: req.body,
