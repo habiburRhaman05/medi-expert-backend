@@ -58,55 +58,30 @@ const loginUser = async (payload: ILoginUserPayload) => {
   if (data.user.isDeleted)
     throw new AppError("User is deleted", status.NOT_FOUND);
 
-  const tokenPayload = {
+  const accessTokenPayload = {
     userId: data.user.id,
     role: data.user.role,
     name: data.user.name,
     email: data.user.email,
     status: data.user.status,
   };
+  const refreshTokenPayload = {
+    ...accessTokenPayload,
+    token:data.token
+  };
 
-  const accessToken = tokenUtils.getAccessToken(tokenPayload);
-  const refreshToken = tokenUtils.getRefreshToken(tokenPayload);
+  const accessToken = tokenUtils.getAccessToken(accessTokenPayload);
+  const refreshToken = tokenUtils.getRefreshToken(refreshTokenPayload);
   const sessionToken = data.token;
 
-  await redis.set(
-    `session:${sessionToken}`,
-    JSON.stringify(tokenPayload),
-    "EX",
-    SESSION_EXPIRE
-  );
-
-  await redis.set(
-    `refresh:${refreshToken}`,
-    sessionToken,
-    "EX",
-    REFRESH_EXPIRE
-  );
-
-  await redis.del(attemptKey);
 
   return { accessToken, refreshToken, sessionToken,user:data.user };
 };
 
 const getAllNewTokens = async (
   refreshToken: string,
-  sessionToken: string
 ) => {
-    console.log("token update start");
- 
-    const isSessionTokenExists = await prisma.session.findUnique({
-        where : {
-            token : sessionToken,
-        },
-        include : {
-            user : true,
-        }
-    })
-
-    if(!isSessionTokenExists){
-        throw new AppError( "Invalid session token",status.UNAUTHORIZED);
-    }
+  
 
     const verifiedRefreshToken = jwtUtils.verifyToken(refreshToken, envConfig.REFRESH_TOKEN_SECRET)
 
@@ -116,6 +91,20 @@ const getAllNewTokens = async (
     }
 
     const data = verifiedRefreshToken.data as JwtPayload;
+
+ 
+    const isSessionTokenExists = await prisma.session.findUnique({
+        where : {
+            token : data.token,
+        },
+        include : {
+            user : true,
+        }
+    })
+
+    if(!isSessionTokenExists){
+        throw new AppError( "Invalid session token",status.UNAUTHORIZED);
+    }
 
     const newAccessToken = tokenUtils.getAccessToken({
         userId: data.userId,
@@ -135,14 +124,15 @@ const getAllNewTokens = async (
         status: data.status,
         isDeleted: data.isDeleted,
         emailVerified: data.emailVerified,
+        token:isSessionTokenExists.token
     });
 
     const {token} = await prisma.session.update({
         where : {
-            token : sessionToken
+            token : data.token
         },
         data : {
-            token : sessionToken,
+            token : data.token,
             expiresAt: new Date(Date.now() + 60 * 60  * 1000),
             updatedAt: new Date(),
         }
