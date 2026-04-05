@@ -102,16 +102,7 @@ const createDoctor = async (payload: ICreateDoctorPayload) => {
                             updatedAt: true,
                         }
                     },
-                    specialty: {
-                        select: {
-                            specialty: {
-                                select: {
-                                    title: true,
-                                    id: true
-                                }
-                            }
-                        }
-                    }
+                   
                 }
             })
 

@@ -1,14 +1,11 @@
-import { AnyZodObject, ZodError } from "zod";
-import { Request, Response, NextFunction } from "express";
-import { formatZodError } from "../utils/formatZodError";
+import { NextFunction, Request, Response } from 'express';
+import { ZodSchema, ZodError } from 'zod'; // Change AnyZodObject to ZodSchema
+import { formatZodError } from '../utils/formatZodError';
 
-export const validateRequest =
-  (schema: AnyZodObject) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
-    
+export const validateRequest = (schema: ZodSchema) => // Use ZodSchema here
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse({
+      await schema.parseAsync({
         body: req.body,
         params: req.params,
         query: req.query,
@@ -22,7 +19,6 @@ export const validateRequest =
           errors: formatZodError(error),
         });
       }
-
       next(error);
     }
   };

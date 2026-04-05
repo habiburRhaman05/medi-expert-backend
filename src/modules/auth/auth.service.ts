@@ -21,7 +21,13 @@ import { PROFILE_CACHE_EXPIRE, REFRESH_EXPIRE, SESSION_EXPIRE } from "../../conf
 
 
 const registerPatient = async (payload: IRegisterPayload) => {
-  const { user } = await auth.api.signUpEmail({ body: payload });
+  console.log(payload);
+  
+  const { user } = await auth.api.signUpEmail({ body: {
+    email:payload.email,
+    name:payload.name,
+    password:payload.password
+  } });
 
   try {
     const patient = await prisma.patient.create({

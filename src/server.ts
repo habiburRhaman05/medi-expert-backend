@@ -1,7 +1,7 @@
 import path from "path";
 import { startServer } from "./app";
-import { connectToDatabase } from "./config/db";
-import "./workers/emailWorker"; 
+import { connectToDatabase, prisma } from "./config/db";
+// import "./workers/emailWorker"; 
 import { configureCloudinary } from "./config/cloudinary.config";
 
 (async () => {
@@ -20,4 +20,5 @@ import { configureCloudinary } from "./config/cloudinary.config";
      
   //   }
   // })
+
 })();

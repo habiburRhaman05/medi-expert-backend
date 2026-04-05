@@ -85,141 +85,108 @@ const getDoctorById = async (id: string) => {
   return formattedDoctor;
 };
 
-// const getAllDoctors = async (query: DoctorQueryParams) => {
-//   const { page = "1", limit = "10", searchTerm, specialty, minFee, maxFee } =
-//     query;
+const getAllDoctors = async (query: DoctorQueryParams) => {
+  const { page = "1", limit = "10", searchTerm, specialty, minFee, maxFee } =
+    query;
+  const pageNumber = parseInt(page);
+  const limitNumber = parseInt(limit);
+  const skip = (pageNumber - 1) * limitNumber;
 
-//   const pageNumber = parseInt(page);
-//   const limitNumber = parseInt(limit);
-//   const skip = (pageNumber - 1) * limitNumber;
+  const cacheKey = `doctors:${JSON.stringify(query)}`;
 
-//   const cacheKey = `doctors:${JSON.stringify(query)}`;
-
-//   const cachedDoctors = await redis.get(cacheKey);
-//   if (cachedDoctors) {
-//     return JSON.parse(cachedDoctors);
-//   }
-
-//   const filters: any = {
-//     isDeleted: false,
-//   };
-
-//   if (searchTerm) {
-//     filters.OR = [
-//       { name: { contains: searchTerm, mode: "insensitive" } },
-//       { designation: { contains: searchTerm, mode: "insensitive" } },
-//       { qualification: { contains: searchTerm, mode: "insensitive" } },
-//     ];
-//   }
-
-//   if (minFee || maxFee) {
-//     filters.appointmentFee = {};
-//     if (minFee) filters.appointmentFee.gte = Number(minFee);
-//     if (maxFee) filters.appointmentFee.lte = Number(maxFee);
-//   }
-
-//   if (specialty) {
-//     filters.specialty = {
-//       some: {
-//         specialty: {
-//           title: {
-//             contains: specialty,
-//             mode: "insensitive",
-//           },
-//         },
-//       },
-//     };
-//   }
-
-//   const [doctors, total] = await Promise.all([
-//     prisma.doctor.findMany({
-//       where: filters,
-//       skip,
-//       take: limitNumber,
-//       orderBy: { createdAt: "desc" },
-//       include: {
-//         specialty: {
-//           include: {
-//             specialty: {
-//               select: {
-//                 id: true,
-//                 title: true,
-//                 icon: true,
-//               },
-//             },
-//           },
-//         },
-//       },
-//     }),
-//     prisma.doctor.count({ where: filters }),
-//   ]);
-
-//   const formattedDoctors = doctors.map((doctor) => {
-//     const doctorSpecialties = doctor.specialty.map((item) => ({
-//       id: item.specialty.id,
-//       title: item.specialty.title,
-//       icon: item.specialty.icon,
-//     }));
-
-//     return {
-//       ...doctor,
-//       doctorSpecialties,
-//     };
-//   });
-
-//   formattedDoctors.forEach((doc: any) => delete doc.specialty);
-
-//   const result = {
-//     meta: {
-//       page: pageNumber,
-//       limit: limitNumber,
-//       total,
-//       totalPages: Math.ceil(total / limitNumber),
-//     },
-//     data: formattedDoctors,
-//   };
-
-//   await redis.set(cacheKey, JSON.stringify(result), "EX", 300);
-
-//   return result;
-// };
-
-
-
-
-const getAllDoctors = async (queryParams: IQueryParams) => {
-  console.log(queryParams);
-
-  const doctorQuery = new QueryBuilder(prisma.doctor, queryParams)
-    .search(['name', 'email', 'contactNumber']) // শুধু এই ফিল্ডে সার্চ হবে
-    .filter(['gender', 'appointmentFee', 'designation']) // শুধু এই ফিল্ডে ফিল্টার হবে
-    .sort()
-    .include({
-      specialtys: {
-        include: {
-          specialty: true
-        }
-      },
-      // Basic user info like status and role
-      user: {
-        select: {
-          status: true,
-          emailVerified: true
-        }
-      }
-    })
-    .paginate();
-  doctorQuery.query.where = {
-    isDeleted: false
+  const cachedDoctors = await redis.get(cacheKey);
+  if (cachedDoctors) {
+    return JSON.parse(cachedDoctors);
   }
 
+  const filters: any = {
+    isDeleted: false,
+  };
 
-  const result = await doctorQuery.execute();
-  console.log(result);
+  if (searchTerm) {
+    filters.OR = [
+      { name: { contains: searchTerm, mode: "insensitive" } },
+      { designation: { contains: searchTerm, mode: "insensitive" } },
+      { qualification: { contains: searchTerm, mode: "insensitive" } },
+    ];
+  }
 
+  if (minFee || maxFee) {
+    filters.appointmentFee = {};
+    if (minFee) filters.appointmentFee.gte = Number(minFee);
+    if (maxFee) filters.appointmentFee.lte = Number(maxFee);
+  }
 
-  return result
+  if (specialty) {
+    filters.specialty = {
+      some: {
+        specialty: {
+          title: {
+            contains: specialty,
+            mode: "insensitive",
+          },
+        },
+      },
+    };
+  }
+
+  const [doctors, total] = await Promise.all([
+    prisma.doctor.findMany({
+      where: filters,
+      skip,
+      take: limitNumber,
+      orderBy: { createdAt: "desc" },
+      include: {
+        specialtys: {
+          include: {
+            specialty: {
+              select: {
+                id: true,
+                title: true,
+                icon: true,
+              },
+            },
+          },
+        },
+        user:true
+      },
+    }),
+    prisma.doctor.count({ where: filters }),
+  ]);
+
+  const formattedDoctors = doctors.map((doctor) => {
+    const doctorSpecialties = doctor.specialtys.map((item) => ({
+      id: item.specialty.id,
+      title: item.specialty.title,
+      icon: item.specialty.icon,
+    }));
+
+    return {
+      ...doctor,
+      doctorSpecialties,
+    };
+  });
+
+  formattedDoctors.forEach((doc: any) => delete doc.specialty);
+
+  const result = {
+    meta: {
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPages: Math.ceil(total / limitNumber),
+    },
+    data: formattedDoctors,
+  };
+
+  await redis.set(cacheKey, JSON.stringify(result), "EX", 300);
+
+  return result;
 };
+
+
+
+
 
 
 const updateDoctor = async (payload: IUpdateDoctorPayload) => {

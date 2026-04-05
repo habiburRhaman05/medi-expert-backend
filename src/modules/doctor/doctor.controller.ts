@@ -29,12 +29,14 @@ const getDoctorById = asyncHandler(
 const getAllDoctors = asyncHandler(
   async (req: Request, res: Response) => {
     const result = await doctorServices.getAllDoctors({
-      searchQuery:req.query.searchQuery as string
+
+      page:req.query.page as string
     });
 
     return sendSuccess(res, {
       statusCode: status.OK,
-      data: result,
+      data: result.data,
+      meta:result.meta,
       message: "Doctors fetched successfully",
     });
   }

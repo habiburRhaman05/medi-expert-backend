@@ -317,6 +317,7 @@ const getAppointmentById = async (id: string) => {
 
 const handlePayLater = async (appointmentId:string)=>{
 
+console.log(appointmentId);
 
    const appointment = await appointmentServices.getAppointmentById(appointmentId);
 

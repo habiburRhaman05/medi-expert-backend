@@ -32,10 +32,11 @@ const getAppointmentById = asyncHandler(
 
     const result = await appointmentServices.getAppointmentById(id as string);
 
+
     sendSuccess(res, {
       statusCode: status.OK,
       message: "Appointment fetched successfully",
-      data: result,
+      data: {...result},
     });
   }
 );

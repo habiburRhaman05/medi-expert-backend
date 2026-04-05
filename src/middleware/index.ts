@@ -17,6 +17,11 @@ const apiLimiter = rateLimit({
 });
 
 export const applyMiddleware = (app: Express): void => {
+    app.use(cors(corsConfig));
+  app.use(compression());
+  app.use(cookieParser());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
   // app.use(httpLogger);
   app.use(
     helmet({
@@ -30,8 +35,5 @@ export const applyMiddleware = (app: Express): void => {
   );
   app.use(hpp());
   // app.use(apiLimiter);
-  app.use(cors(corsConfig));
-  app.use(compression());
-  app.use(cookieParser());
-  app.use(express.json({ limit: "1mb" }));
+
 };
