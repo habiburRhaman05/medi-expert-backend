@@ -47,10 +47,23 @@ app.get("/health",async (_req, res) =>{
 });
 
 
-app.get("/", (req, res) => {
-  res.render("home");
-});
+// app.get("/", (req, res) => {
+//   res.render("home");
+// });
 
+// server.ts
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+app.get('/', async (req, res) => {
+  await delay(3000); 
+  res.json({
+    message:   'Hello!',
+    server_id: process.env.SERVER_ID,  
+    container: process.env.HOSTNAME,   
+    port:      process.env.PORT,
+    pid:       process.pid
+  });
+});
 
 export const startServer = async () => {
 
