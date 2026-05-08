@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "npx tsx watch src/server.ts",
-    "build": "prisma generate && prisma migrate deploy && tsup",
+    "build": "prisma generate && tsup",
     "migrate": "prisma generate && prisma db push",
-    "start": "node dist/server.js",
+    "start": " prisma migrate deploy && node dist/server.js",
     "lint": "eslint . --ext .ts",
     "test": "vitest",
     "stripe:webhook": "stripe listen --forward-to localhost:5000/api/v1/stripe/webhook",
